@@ -19,6 +19,12 @@ For checking:
 Enter the message, a public key (base58chk) and a signature (base64).
 
 
+ Future Improvements:
+Determinstic signing
+Private key import wizard (wallet.dat, DER, ...)
+Signature export and import options (format, PKCS,...)
+
+
  Licence related:
 Some portions based on :
 "python-ecdsa" Copyright (C) 2010 Brian Warner (MIT Licence)

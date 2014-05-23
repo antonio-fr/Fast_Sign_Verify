@@ -60,22 +60,21 @@ class MyownFrame ( MainFrame.MyFrame1 ):
     
     def copyall( self, event ):
         event.Skip()
-        address=self.address_pub
         signature=self.signature.GetValue()
-        message=self.text_signed.GetValue()
-        clipboard.add_cb(output_full_sig(message,address,signature))
-
-class MessageDialog( MainFrame.MyDialog1 ):
-    None
+        if signature!="" and not signature.startswith("Error"):
+            address=self.address_pub
+            message=self.text_signed.GetValue()
+            clipboard.add_cb(output_full_sig(message,address,signature))
 
 def aff_msg(message):
-    msgdial=MessageDialog(None)
+    msgdial=MainFrame.MyDialog1(frame1)
     msgdial.mess_text.SetLabel(message)
     msgdial.Show(True)
 
 if __name__ == '__main__' :
     app = MyownApp(True)
     frame1 = MyownFrame(None)
+    frame1.address_pub = "No Address"
     frame1.Show(True)
     app.SetTopWindow(frame1)
     app.MainLoop()

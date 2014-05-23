@@ -170,9 +170,7 @@ class Public_key( object ):
     if self.point == INFINITY: return False
     G = self.generator
     n = G.order()
-    #if self.point.x() < 0 or n <= self.point.x() or self.point.y() < 0 or n <= self.point.y(): return False
     if not curve_256.contains_point(self.point.x(),self.point.y()): return False
-    #if n * self.point != INFINITY: return False
     hash=msg_aver
     r = signature.r
     s = signature.s
@@ -285,7 +283,7 @@ def bitcoin_verify_message(address, signature, message):
         pubkey = Public_key( G, Q)
         # checks that Q is the public key of the signature
         assert pubkey.verifies( e, Signature(0,r,s) )
-        # checks th eaddress provided is the signing address
+        # checks the address provided is the signing address
         addr = pub_hex_base58( pubkey.point.x(), pubkey.point.y() )
         if address != addr:
             raise Exception("Bad signature")

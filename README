@@ -9,20 +9,53 @@ signature. It can check or sign with a wallet.
 
  Install :
 Needs Python 2.7 and WxPython > 2.8
-Zip with binaries will be provided later for windows.
+Zip with binaries for windows are provided in Releases.
+
 
  Use:
 For signing:
 Enter a message and a private key (base58chk).
+Signature will appear in "signature" field after clicking on "Sign".
+You can copy in clipboard the signature alone or the full signature
+with "Copy All". This will fill the clipboard with "PGP style" signature
+that you can copy directly in your email, forum message, etc...
 
 For checking:
 Enter the message, a public key (base58chk) and a signature (base64).
+You can also enter a full message "PGP like" in message field (no
+need to fill Address nor Signature field.)
+It automagically detects the format between these two:
+1) Simple "Input.io" style
+---- MESSAGE HEADER ----
+message signed
+is here
+---- SIG HEADER ----
+1AddressBitcoin
+Signature=
+---- END FOOTER ----
+
+2) "Qt1.0" style, Multibit
+---- MESSAGE HEADER ----
+message signed
+is here
+---- SIG HEADER ----
+Version: Info
+Address: 1AddressBitcoin
+
+Signature=
+---- END FOOTER ----
+
+If you have any other format, you have to enter in the dedicated fields.
+For example when message is signed with Electrum or official client, most
+of the time you have to enter in 3 fields (message, address and signature).  
 
 
  Future Improvements:
 Determinstic signing
 Private key import wizard (wallet.dat, DER, ...)
 Signature export and import options (format, PKCS,...)
+Private key, address, options saving
+BTChip integration (signing with USB keycard)
 
 
  Licence related:

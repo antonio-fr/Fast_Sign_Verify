@@ -49,6 +49,7 @@ class MyownFrame ( MainFrame.MyFrame1 ):
             address=self.address.GetValue()
             signature=self.signature.GetValue()
             message=self.text_signed.GetValue()
+            if message.startswith("---"): address, signature, message = decode_sig_msg(message)
             bitcoin_verify_message(address, signature, message)
             aff_msg( "OK, Genuine!" )
         except Exception as inst:

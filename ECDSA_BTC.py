@@ -27,6 +27,7 @@ import os
 from B58 import *
 import binascii
 import base64
+import struct
 
 class CurveFp( object ):
   def __init__( self, p, b ):
@@ -139,9 +140,8 @@ _Gx= 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798L
 _Gy= 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8L
 
 def dsha256(message):
-  if type(message) is unicode: message=message.encode('utf-8')
-  hash1=hashlib.sha256(message).digest()
-  return int(hashlib.sha256(hash1).hexdigest(),16)
+    hash1=hashlib.sha256(message).digest()
+    return int(hashlib.sha256(hash1).hexdigest(),16)
 
 class Signature( object ):
   def __init__( self, pby, r, s ):
@@ -224,9 +224,12 @@ def is_address(addr):
     return addr == hash_160_to_bc_address(h, addrtype)
 
 def bitcoin_sign_message(privkey, message, k):
-  return privkey.sign( "\x18Bitcoin Signed Message:\n" \
-                       + chr(len(message)) + message  , 
-                       k )
+    message=message.replace("\r\n","\n")
+    lenmsg=len(message)
+    if lenmsg<253: lm = bytearray(struct.pack('B',lenmsg))
+    else: lm = bytearray(struct.pack('B',253)+struct.pack('<H',lenmsg)) # up to 65k
+    be = bytearray("\x18Bitcoin Signed Message:\n")+ lm + bytearray(message,'utf8')
+    return privkey.sign( be , k )
 
 def bitcoin_encode_sig(signature):
   return chr( 27 + signature.pby ) + signature.encode()
@@ -255,7 +258,6 @@ def bitcoin_verify_message(address, signature, message):
             raise Exception("Bad encoding")
         if nV >= 31:
             compressed = True
-            raise Exception("Compressed signature not yet managed")
             nV -= 4
         else:
             compressed = False
@@ -273,8 +275,12 @@ def bitcoin_verify_message(address, signature, message):
         assert curve_256.contains_point(r,y)
         # checks that nR is at infinity
         assert order*R==INFINITY
-        e = dsha256( "\x18Bitcoin Signed Message:\n" \
-                       + chr(len(message)) + message )
+        message=message.replace("\r\n","\n")
+        lenmsg=len(message)
+        if lenmsg<253: lm = bytearray(struct.pack('B',lenmsg))
+        else: lm = bytearray(struct.pack('B',253)+struct.pack('<H',lenmsg)) # up to 65k
+        be = bytearray("\x18Bitcoin Signed Message:\n")+ lm + bytearray(message,'utf8')
+        e = dsha256( be )
         minus_e = -e % order
         # Q = r^-1 (sR - eG)
         inv_r = inverse_mod(r,order)
@@ -284,9 +290,23 @@ def bitcoin_verify_message(address, signature, message):
         # checks that Q is the public key of the signature
         assert pubkey.verifies( e, Signature(0,r,s) )
         # checks the address provided is the signing address
-        addr = pub_hex_base58( pubkey.point.x(), pubkey.point.y() )
+        addr = pub_hex_base58( pubkey.point.x(), pubkey.point.y(), compressed )
         if address != addr:
             raise Exception("Bad signature")
 
 curve_256 = CurveFp( _p, _b )
 generator_256 = Point( _Gx, _Gy, _r )
+
+def decode_sig_msg(msg):
+    msg=msg.replace("\r\n","\n")
+    msglines=msg.split('\n')
+    nline=len(msglines)
+    i=1
+    message=""
+    while not msglines[i].startswith("---"):
+        message=message+"\n"+msglines[i]
+        i=i+1
+    address=msglines[nline-3]
+    if address=="": address=msglines[nline-4][9:]
+    signature=msglines[nline-2]
+    return address, signature, message[1:]

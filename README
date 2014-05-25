@@ -8,9 +8,8 @@ signature. It can check or sign with a wallet.
 
 
  Install :
-Needs Python 2.7 and WxPython > 2.8
 Zip with binaries for windows are provided in Releases.
-
+Needs Python 2.7.x and WxPython >= 2.8 (Linux, MacOSX)
 
  Use:
 For signing:

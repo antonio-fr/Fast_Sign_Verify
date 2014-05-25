@@ -29,6 +29,8 @@ class MyownApp(wx.App):
 class MyownFrame ( MainFrame.MyFrame1 ):
     def sign_click( self, event ):
         event.Skip()
+        self.signature.SetValue("Signing in progress...")
+        self.Update()
         is_deterministic=self.check_determin.GetValue()
         try:
             if is_deterministic: raise Exception("Determinstic signing not yet supported!")
@@ -46,18 +48,24 @@ class MyownFrame ( MainFrame.MyFrame1 ):
     def verify_click( self, event ):
         event.Skip()
         try:
-            address=self.address.GetValue()
             signature=self.signature.GetValue()
             message=self.text_signed.GetValue()
+            address=self.address.GetValue()
             if message.startswith("---"): address, signature, message = decode_sig_msg(message)
+            self.signature.SetValue("Checking in progress...\n"+signature)
+            self.Update()
             bitcoin_verify_message(address, signature, message)
             aff_msg( "OK, Genuine!" )
         except Exception as inst:
             aff_msg( "FALSE or Error\n"+str(inst))
+        self.signature.SetValue(signature)
+        self.Update()
     
     def copy_sig( self, event ):
         event.Skip()
-        clipboard.add_cb(self.signature.GetValue())
+        signature=self.signature.GetValue()
+        if signature!="" and not signature.startswith("Error"):
+            clipboard.add_cb(self.signature.GetValue())
     
     def copyall( self, event ):
         event.Skip()

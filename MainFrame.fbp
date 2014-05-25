@@ -44,10 +44,10 @@
             <property name="minimum_size"></property>
             <property name="name">MyFrame1</property>
             <property name="pos"></property>
-            <property name="size">502,560</property>
+            <property name="size">504,571</property>
             <property name="style">wxCAPTION|wxCLOSE_BOX|wxSYSTEM_MENU</property>
             <property name="subclass"></property>
-            <property name="title">FastSignVerify</property>
+            <property name="title">FastSignVerify  v0.12</property>
             <property name="tooltip"></property>
             <property name="window_extra_style"></property>
             <property name="window_name"></property>
@@ -332,7 +332,7 @@
                                 <property name="pos">-1,-1</property>
                                 <property name="resize">Resizable</property>
                                 <property name="show">1</property>
-                                <property name="size">350,-1</property>
+                                <property name="size">380,-1</property>
                                 <property name="style"></property>
                                 <property name="subclass"></property>
                                 <property name="toolbar_pane">0</property>
@@ -713,7 +713,7 @@
                                 <property name="maximum_size"></property>
                                 <property name="min_size"></property>
                                 <property name="minimize_button">0</property>
-                                <property name="minimum_size">-1,25</property>
+                                <property name="minimum_size">-1,35</property>
                                 <property name="moveable">1</property>
                                 <property name="name">m_button2</property>
                                 <property name="pane_border">1</property>
@@ -801,7 +801,7 @@
                                 <property name="maximum_size"></property>
                                 <property name="min_size"></property>
                                 <property name="minimize_button">0</property>
-                                <property name="minimum_size">-1,25</property>
+                                <property name="minimum_size">-1,35</property>
                                 <property name="moveable">1</property>
                                 <property name="name">m_button3</property>
                                 <property name="pane_border">1</property>
@@ -1048,10 +1048,10 @@
             <property name="minimum_size"></property>
             <property name="name">MyDialog1</property>
             <property name="pos"></property>
-            <property name="size">501,176</property>
+            <property name="size">440,160</property>
             <property name="style">wxDEFAULT_DIALOG_STYLE|wxSTAY_ON_TOP</property>
             <property name="subclass"></property>
-            <property name="title">MESSAGE</property>
+            <property name="title">Checking Status</property>
             <property name="tooltip"></property>
             <property name="window_extra_style"></property>
             <property name="window_name"></property>
@@ -1135,7 +1135,7 @@
                         <property name="enabled">1</property>
                         <property name="fg"></property>
                         <property name="floatable">1</property>
-                        <property name="font">,90,90,12,70,0</property>
+                        <property name="font">,90,90,14,70,0</property>
                         <property name="gripper">0</property>
                         <property name="hidden">0</property>
                         <property name="id">wxID_ANY</property>

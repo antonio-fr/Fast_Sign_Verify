@@ -17,7 +17,7 @@ import wx.xrc
 class MyFrame1 ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"FastSignVerify", pos = wx.DefaultPosition, size = wx.Size( 502,560 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"FastSignVerify  v0.12", pos = wx.DefaultPosition, size = wx.Size( 504,571 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL )
 		
 		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		self.SetBackgroundColour( wx.Colour( 245, 247, 248 ) )
@@ -40,7 +40,7 @@ class MyFrame1 ( wx.Frame ):
 		
 		fgSizer2.Add( self.m_staticText2, 0, wx.ALL|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL, 5 )
 		
-		self.address = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.Point( -1,-1 ), wx.Size( 350,-1 ), 0 )
+		self.address = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.Point( -1,-1 ), wx.Size( 380,-1 ), 0 )
 		self.address.SetFont( wx.Font( 12, 70, 90, 90, False, wx.EmptyString ) )
 		
 		fgSizer2.Add( self.address, 0, wx.ALL|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL, 5 )
@@ -77,13 +77,13 @@ class MyFrame1 ( wx.Frame ):
 		gSizer3.SetMinSize( wx.Size( -1,75 ) ) 
 		self.m_button2 = wx.Button( self, wx.ID_ANY, u"SIGN", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_button2.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 92, False, wx.EmptyString ) )
-		self.m_button2.SetMinSize( wx.Size( -1,25 ) )
+		self.m_button2.SetMinSize( wx.Size( -1,35 ) )
 		
 		gSizer3.Add( self.m_button2, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		self.m_button3 = wx.Button( self, wx.ID_ANY, u"VERIFY", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_button3.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 92, False, wx.EmptyString ) )
-		self.m_button3.SetMinSize( wx.Size( -1,25 ) )
+		self.m_button3.SetMinSize( wx.Size( -1,35 ) )
 		
 		gSizer3.Add( self.m_button3, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
@@ -135,7 +135,7 @@ class MyFrame1 ( wx.Frame ):
 class MyDialog1 ( wx.Dialog ):
 	
 	def __init__( self, parent ):
-		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"MESSAGE", pos = wx.DefaultPosition, size = wx.Size( 501,176 ), style = wx.DEFAULT_DIALOG_STYLE|wx.STAY_ON_TOP )
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Checking Status", pos = wx.DefaultPosition, size = wx.Size( 440,160 ), style = wx.DEFAULT_DIALOG_STYLE|wx.STAY_ON_TOP )
 		
 		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		
@@ -146,7 +146,7 @@ class MyDialog1 ( wx.Dialog ):
 		
 		self.mess_text = wx.StaticText( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
 		self.mess_text.Wrap( -1 )
-		self.mess_text.SetFont( wx.Font( 12, 70, 90, 90, False, wx.EmptyString ) )
+		self.mess_text.SetFont( wx.Font( 14, 70, 90, 90, False, wx.EmptyString ) )
 		
 		bSizer2.Add( self.mess_text, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		

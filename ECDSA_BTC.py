@@ -79,14 +79,14 @@ class Point( object ):
     e3 = 3 * e
     negative_self = Point( self.__x, -self.__y, self.__order )
     i = 0x100000000000000000000000000000000000000000000000000000000000000000L
-    while i > e3: i >>= 1L
+    while i > e3: i >>= 1
     result = self
-    while i > 2L:
-      i >>= 1L
+    while i > 2:
+      i >>= 1
       result = result.double()
       ei = e&i
       if (e3&i)^ei : 
-        if ei==0L    : result += self
+        if ei==0   : result += self
         else         : result += negative_self
     return result
 
@@ -106,6 +106,38 @@ class Point( object ):
     y3=(3*xyd*(self.__x-x3)-self.__y)%p
     return Point( x3, y3 )
 
+  def dual_mult(self, k1, k2):
+    # Compute k1.G+k2.self
+    if self.__order: k2 = k2 % self.__order
+    if k2 == 0: return INFINITY
+    if self == INFINITY: return INFINITY
+    if k1 == 0: return INFINITY
+    assert k2 > 0
+    assert k1> 0
+    e3, k3 = 3 * k2, 3 * k1
+    negative_self = Point( self.__x, -self.__y, self.__order )
+    neg_generator_256 = Point( _Gx, -_Gy, _r )
+    i = 0x100000000000000000000000000000000000000000000000000000000000000000L
+    ke3 = e3 | k3
+    while i > ke3: i >>= 1
+    if k3>e3:
+      result = generator_256
+      if (e3&i)==(k3&i): result += self
+    else:
+      result = self
+      if (e3&i)==(k3&i): result += generator_256
+    while i > 2:
+      i >>= 1
+      result = result.double()
+      ei, ki = k2&i, k1&i
+      if (e3&i)^ei : 
+        if ei==0     : result +=  self
+        else         : result += negative_self
+      if (k3&i)^ki : 
+        if ki==0     : result +=  generator_256
+        else         : result += neg_generator_256
+    return result
+    
   def x( self ):
     return self.__x
 
@@ -179,7 +211,7 @@ class Public_key( object ):
     c = inverse_mod( s, n )
     u1 = ( hash * c ) % n
     u2 = ( r * c ) % n
-    xy = u1 * G + u2 * self.point
+    xy =  self.point.dual_mult( u1, u2) # u1 * G + u2 * self.point
     v = xy.x() % n
     return v == r
 
@@ -282,9 +314,9 @@ def bitcoin_verify_message(address, signature, message):
         be = bytearray("\x18Bitcoin Signed Message:\n")+ lm + bytearray(message,'utf8')
         e = dsha256( be )
         minus_e = -e % order
-        # Q = r^-1 (sR - eG)
+        # Q = (sR - eG) / r
         inv_r = inverse_mod(r,order)
-        Q = inv_r * ( s * R + minus_e * G )
+        Q = inv_r * (  R.dual_mult( minus_e, s ) )
         # checks Q in range, Q on curve, Q order
         pubkey = Public_key( G, Q)
         # checks that Q is the public key of the signature

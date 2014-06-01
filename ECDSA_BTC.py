@@ -28,153 +28,37 @@ from B58 import *
 import binascii
 import base64
 import struct
+from ECDSA_256k1 import *
+import cPickle as pickle
 
-class CurveFp( object ):
-  def __init__( self, p, b ):
-    self.__p = p
-    self.__b = b
+def load_gtable(filename):
+    with open(filename, 'rb') as input:
+         global gtable
+         gtable = pickle.load(input)
 
-  def p( self ):
-    return self.__p
-
-  def b( self ):
-    return self.__b
-
-  def contains_point( self, x, y ):
-    return ( y * y - ( x * x * x + self.__b ) ) % self.__p == 0
-
-class Point( object ):
-  def __init__( self, x, y, order = None ):
-    self.__x = x
-    self.__y = y
-    self.__order = order
-
-  def __eq__( self, other ):
-    if self.__x == other.__x   \
-     and self.__y == other.__y:
-      return True
-    else:
-      return False
-
-  def __add__( self, other ):
-    if other == INFINITY: return self
-    if self == INFINITY: return other
-    p=curve_256.p()
-    if self.__x == other.__x:
-      if ( self.__y + other.__y ) % p == 0:
-        return INFINITY
-      else:
-        return self.double()
-    l = ( ( other.__y - self.__y ) * inverse_mod( other.__x - self.__x, p ) ) % p
-    x3 = ( l * l - self.__x - other.__x ) % p
-    y3 = ( l * ( self.__x - x3 ) - self.__y ) % p
-    return Point( x3, y3 )
-
-  def __mul__( self, other ):
-    e = other
-    if self.__order: e = e % self.__order
-    if e == 0: return INFINITY
-    if self == INFINITY: return INFINITY
-    assert e > 0
-    e3 = 3 * e
-    negative_self = Point( self.__x, -self.__y, self.__order )
-    i = 0x100000000000000000000000000000000000000000000000000000000000000000L
-    while i > e3: i >>= 1
-    result = self
-    while i > 2:
-      i >>= 1
-      result = result.double()
-      ei = e&i
-      if (e3&i)^ei : 
-        if ei==0   : result += self
-        else         : result += negative_self
-    return result
-
-  def __rmul__( self, other ):
-   return self * other
-
-  def __str__( self ):
-    if self == INFINITY: return "infinity"
-    return "(%d,%d)" % ( self.__x, self.__y )
-
-  def double( self ):
-    p=curve_256.p()
-    if self == INFINITY:
-      return INFINITY
-    xyd=((self.__x*self.__x)*inverse_mod(2*self.__y,p))%p
-    x3=(9*xyd*xyd-2*self.__x)%p
-    y3=(3*xyd*(self.__x-x3)-self.__y)%p
-    return Point( x3, y3 )
-
-  def dual_mult(self, k1, k2):
-    # Compute k1.G+k2.self
-    if self.__order: k2 = k2 % self.__order
-    if k2 == 0: return INFINITY
-    if self == INFINITY: return INFINITY
-    if k1 == 0: return INFINITY
-    assert k2 > 0
-    assert k1> 0
-    e3, k3 = 3 * k2, 3 * k1
-    negative_self = Point( self.__x, -self.__y, self.__order )
-    neg_generator_256 = Point( _Gx, -_Gy, _r )
-    i = 0x100000000000000000000000000000000000000000000000000000000000000000L
-    ke3 = e3 | k3
-    while i > ke3: i >>= 1
-    if k3>e3:
-      result = generator_256
-      if (e3&i)==(k3&i): result += self
-    else:
-      result = self
-      if (e3&i)==(k3&i): result += generator_256
-    while i > 2:
-      i >>= 1
-      result = result.double()
-      ei, ki = k2&i, k1&i
-      if (e3&i)^ei : 
-        if ei==0     : result +=  self
-        else         : result += negative_self
-      if (k3&i)^ki : 
-        if ki==0     : result +=  generator_256
-        else         : result += neg_generator_256
-    return result
-    
-  def x( self ):
-    return self.__x
-
-  def y( self ):
-    return self.__y
-
-  def curve( self ):
-    return self.__curve
-  
-  def order( self ):
-    return self.__order
-    
-INFINITY = Point( None, None )
-
-def inverse_mod( a, m ):
-  if a < 0 or m <= a: a = a % m
-  c, d = a, m
-  uc, vc, ud, vd = 1, 0, 0, 1
-  while c != 0:
-    q, c, d = divmod( d, c ) + ( c, )
-    uc, vc, ud, vd = ud - q*uc, vd - q*vc, uc, vc
-  assert d == 1
-  if ud > 0: return ud
-  else: return ud + m
-
-# secp256k1
-_p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2FL
-_r = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141L
-_b = 0x0000000000000000000000000000000000000000000000000000000000000007L
-#a = 0x00
-_Gx= 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798L
-_Gy= 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8L
+def mulG(real):
+    if real == 0: return INFINITY
+    assert real > 0
+    br=[]
+    dw=16
+    while real > 0 :
+        dm = real%dw
+        real = real - dm
+        br.append( dm-1 )
+        real = real>>4
+    while len(br)<64: br.append(-1)
+    kg=INFINITY
+    for n in range(64):
+        if br[n]>=0:
+            precomp=gtable[n][br[n]]
+            kg=kg+precomp
+    return kg
 
 def dsha256(message):
     hash1=hashlib.sha256(message).digest()
     return int(hashlib.sha256(hash1).hexdigest(),16)
-
+    
+    
 class Signature( object ):
   def __init__( self, pby, r, s ):
     self.r = r
@@ -198,18 +82,17 @@ class Public_key( object ):
     if point.x() < 0 or n <= point.x() or point.y() < 0 or n <= point.y():
       raise RuntimeError, "Generator point has x or y out of range."
 
-  def verifies( self, msg_aver, signature ):
+  def verifies( self, hashe, signature ):
     if self.point == INFINITY: return False
     G = self.generator
     n = G.order()
     if not curve_256.contains_point(self.point.x(),self.point.y()): return False
-    hash=msg_aver
     r = signature.r
     s = signature.s
     if r < 1 or r > n-1: return False
     if s < 1 or s > n-1: return False
     c = inverse_mod( s, n )
-    u1 = ( hash * c ) % n
+    u1 = ( hashe * c ) % n
     u2 = ( r * c ) % n
     xy =  self.point.dual_mult( u1, u2) # u1 * G + u2 * self.point
     v = xy.x() % n
@@ -232,7 +115,7 @@ class Private_key( object ):
     hash=dsha256(msg_asig)
     G = self.public_key.generator
     n = G.order()
-    p1 = k * G
+    p1 = mulG(k)
     r = p1.x()
     pby= p1.y()&1
     if r == 0: raise RuntimeError, "amazingly unlucky random number r"
@@ -245,15 +128,6 @@ def randoml(pointgen):
   while cand<1 or cand>=pointgen.order():
     cand=int(os.urandom(32).encode('hex'), 16)
   return cand
-
-def is_address(addr):
-    ADDRESS_RE = re.compile('[1-9A-HJ-NP-Za-km-z]{26,}\\Z')
-    if not ADDRESS_RE.match(addr): return False
-    try:
-        addrtype, h = bc_address_to_hash_160(addr)
-    except Exception:
-        return False
-    return addr == hash_160_to_bc_address(h, addrtype)
 
 def bitcoin_sign_message(privkey, message, k):
     message=message.replace("\r\n","\n")
@@ -285,6 +159,8 @@ def bitcoin_verify_message(address, signature, message):
         if len(sig) != 65: raise Exception("Wrong encoding")
         r = int(binascii.hexlify(sig[ 1:33]),16)
         s = int(binascii.hexlify(sig[33:  ]),16)
+        assert r > 0 and r <= n-1
+        assert s > 0 and s <= n-1
         nV = ord(sig[0])
         if nV < 27 or nV >= 35:
             raise Exception("Bad encoding")
@@ -312,22 +188,23 @@ def bitcoin_verify_message(address, signature, message):
         if lenmsg<253: lm = bytearray(struct.pack('B',lenmsg))
         else: lm = bytearray(struct.pack('B',253)+struct.pack('<H',lenmsg)) # up to 65k
         be = bytearray("\x18Bitcoin Signed Message:\n")+ lm + bytearray(message,'utf8')
+        inv_r = inverse_mod(r,order)    
         e = dsha256( be )
-        minus_e = -e % order
         # Q = (sR - eG) / r
-        inv_r = inverse_mod(r,order)
-        Q = inv_r * (  R.dual_mult( minus_e, s ) )
+        Q = inv_r * (  R.dual_mult( -e % order, s ) )
         # checks Q in range, Q on curve, Q order
         pubkey = Public_key( G, Q)
-        # checks that Q is the public key of the signature
-        assert pubkey.verifies( e, Signature(0,r,s) )
-        # checks the address provided is the signing address
         addr = pub_hex_base58( pubkey.point.x(), pubkey.point.y(), compressed )
+        # checks the address provided is the signing address
         if address != addr:
             raise Exception("Bad signature")
-
-curve_256 = CurveFp( _p, _b )
-generator_256 = Point( _Gx, _Gy, _r )
+        # No need to check signature, since we don't have the public key
+        # Public key is extracted from signature, verification will always return OK
+        # We compute the pub key from the expected result of sig check.
+        # Since Q =(sR-eG)/r  then  R == e/s*G + r/s*Q  is always true
+        #pubkey.verifies( e, Signature(0,r,s) )
+        
+        
 
 def decode_sig_msg(msg):
     msg=msg.replace("\r\n","\n")
@@ -342,3 +219,73 @@ def decode_sig_msg(msg):
     if address=="": address=msglines[nline-4][9:]
     signature=msglines[nline-2]
     return address, signature, message[1:]
+    
+if __name__ == '__main__' :
+    import random
+    import string
+    load_gtable('G_Table')
+    print "Tests started"
+    
+    message_signed = \
+    """-----BEGIN BITCOIN SIGNED MESSAGE-----
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse faucibus, arcu imperdiet lacinia faucibus, magna tellus suscipit tortor, et auctor orci mi elementum leo. Aliquam vitae arcu viverra, tempus sem eget, mattis libero. Vestibulum ut libero dignissim, rhoncus augue eu, vulputate nisl. Quisque vitae pulvinar enim. Nullam lobortis tellus in eros consectetur, et iaculis eros interdum. Nam vehicula, sapien id consectetur rutrum, felis leo convallis eros, eget lacinia tellus nunc in dui. Etiam a quam eu lectus aliquam scelerisque. Vestibulum ac semper velit. Ut eget nulla eros. Sed venenatis purus eros, eu convallis lectus congue at. Suspendisse ipsum est, elementum et ultricies ac, sollicitudin sit amet urna. Proin viverra fusce.
+-----BEGIN SIGNATURE-----
+1B4ZZijK1w8xomMHyChXCgRwtN6LRvBgEi
+G+5z8qAYM6LekZeE8ruDs1R1egjedfQxz0q8ja+v9pvWQWGozoiToB6aemOdPAOh4OFVysBMNmhZhCyIJierV+M=
+-----END BITCOIN SIGNED MESSAGE-----"""
+    
+    def change_car(text, pos, car):
+        return text[:pos] + car + text[pos+1:]
+        
+    def test_false_signature(address, signature, message):
+        try:
+            bitcoin_verify_message(address, signature, message)
+            no_problem=False
+        except Exception as inst:
+            no_problem=True
+        assert no_problem
+    
+    address1, signature1, message1 = decode_sig_msg(message_signed)
+    
+    print "\nSignature checking for validity"
+    bitcoin_verify_message(address1, signature1, message1)
+    
+    print "\nCheck with falsified message"
+    message=change_car(message1, 231, "l")
+    test_false_signature(address1, signature1, message)
+    
+    print "\nCheck with falsified signature"
+    signature=change_car(signature1,42,"u")
+    test_false_signature(address1, signature, message1)
+    
+    print "\nCheck with falsified address"
+    address = "1CVaUy7x8EA6wdnXCGkRChJASV4MAmje4g"
+    test_false_signature(address, signature1, message1)
+    
+    print "\nBatch sign & check of random keys and messages"
+    maxend=200
+    g=generator_256
+    random.seed(int(os.urandom(32).encode('hex'), 16))
+    for i in xrange(maxend):
+        print i+1, "/", maxend
+        secret = random.randint(1,g.order())
+        message = ''.join([random.choice(string.digits+string.letters+'    \n') for x in range(80)])
+        try:
+            pubkey = Public_key( g, secret*g )
+            privkey = Private_key( pubkey, secret )
+            address_pub = pub_hex_base58( pubkey.point.x(), pubkey.point.y() )
+            signature = bitcoin_sign_message( privkey, message, randoml(g) )
+            signature_str = bitcoin_encode_sig( signature )
+            signature64 = base64.b64encode( signature_str )
+            fullsig=output_full_sig(message,address_pub,signature64)
+            addr, sigd, msgd = decode_sig_msg(fullsig)
+            bitcoin_verify_message(addr, sigd, msgd)
+        except Exception as inst:
+            print "ERROR :",str(inst)
+            print message
+            print secret
+            print signature64
+            print address_pub
+            raise
+        
+    print "ALL TESTS PASSED !"

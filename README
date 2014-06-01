@@ -6,6 +6,9 @@ Copyright (C) 2014  Antoine FERRON
 This is a software for PC which is focused on ECDSA Bitcoin
 signature. It can check or sign with a wallet.
 
+Official thread, support:
+bitcointalk.org/index.php?topic=623085
+
 
  Install :
 Zip with binaries for windows are provided in Releases.
@@ -13,16 +16,19 @@ Needs Python 2.7.x and WxPython >= 2.8 (Linux, MacOSX)
 
  Use:
 For signing:
-Enter a message and a private key (base58chk).
+Enter a message and a private key (WIF - base58chk).
 Signature will appear in "signature" field after clicking on "Sign".
 You can copy in clipboard the signature alone or the full signature
 with "Copy All". This will fill the clipboard with "PGP style" signature
 that you can copy directly in your email, forum message, etc...
+For now, I don't recommend signing using Windows.
+
 
 For checking:
 Enter the message, a public key (base58chk) and a signature (base64).
 You can also enter a full message "PGP like" in message field (no
 need to fill Address nor Signature field.)
+
 It automagically detects the format between these two:
 1) Simple "Input.io" style
 ---- MESSAGE HEADER ----

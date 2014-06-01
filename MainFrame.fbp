@@ -47,7 +47,7 @@
             <property name="size">504,571</property>
             <property name="style">wxCAPTION|wxCLOSE_BOX|wxSYSTEM_MENU</property>
             <property name="subclass"></property>
-            <property name="title">FastSignVerify  v0.14</property>
+            <property name="title">FastSignVerify  v0.xx</property>
             <property name="tooltip"></property>
             <property name="window_extra_style"></property>
             <property name="window_name"></property>

@@ -19,6 +19,7 @@ import sys
 import wx
 import MainFrame
 from ECDSA_BTC import *
+from ECDSA_256k1 import *
 import base64
 import clipboard
 
@@ -51,7 +52,9 @@ class MyownFrame ( MainFrame.MyFrame1 ):
             signature=self.signature.GetValue()
             message=self.text_signed.GetValue()
             address=self.address.GetValue()
-            if message.startswith("---"): address, signature, message = decode_sig_msg(message)
+            if message.startswith("---"):
+                address, signature, message = decode_sig_msg(message)
+                self.address.SetValue(address)
             self.signature.SetValue("Checking in progress...\n"+signature)
             self.Update()
             bitcoin_verify_message(address, signature, message)
@@ -79,11 +82,13 @@ def aff_msg(message):
     msgdial=MainFrame.MyDialog1(frame1)
     msgdial.mess_text.SetLabel(message)
     msgdial.Show(True)
+    
 
 if __name__ == '__main__' :
     app = MyownApp(True)
     frame1 = MyownFrame(None)
     frame1.address_pub = "No Address"
+    load_gtable('G_Table')
     frame1.Show(True)
     app.SetTopWindow(frame1)
     app.MainLoop()

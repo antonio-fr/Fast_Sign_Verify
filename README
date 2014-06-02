@@ -11,8 +11,9 @@ bitcointalk.org/index.php?topic=623085
 
 
  Install :
-Zip with binaries for windows are provided in Releases.
-Needs Python 2.7.x and WxPython >= 2.8 (Linux, MacOSX)
+Windows : Zip with binaries provided in Releases.
+Linux or MacOSX : Needs Python 2.7.x and WxPython >= 2.8
+
 
  Use:
 For signing:

@@ -159,8 +159,8 @@ def bitcoin_verify_message(address, signature, message):
         if len(sig) != 65: raise Exception("Wrong encoding")
         r = int(binascii.hexlify(sig[ 1:33]),16)
         s = int(binascii.hexlify(sig[33:  ]),16)
-        assert r > 0 and r <= n-1
-        assert s > 0 and s <= n-1
+        assert r > 0 and r <= order-1
+        assert s > 0 and s <= order-1
         nV = ord(sig[0])
         if nV < 27 or nV >= 35:
             raise Exception("Bad encoding")

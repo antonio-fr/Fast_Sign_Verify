@@ -18,11 +18,12 @@ Linux or MacOSX : Needs Python 2.7.x and WxPython >= 2.8
  Use:
 For signing:
 Enter a message and a private key (WIF - base58chk).
+You can chose determinstic signing or standard random signature.
 Signature will appear in "signature" field after clicking on "Sign".
 You can copy in clipboard the signature alone or the full signature
 with "Copy All". This will fill the clipboard with "PGP style" signature
 that you can copy directly in your email, forum message, etc...
-For now, I don't recommend signing using Windows.
+For now, I don't recommend signing using Windows without deterministic.
 
 
 For checking:
@@ -57,7 +58,6 @@ of the time you have to enter in 3 fields (message, address and signature).
 
 
  Future Improvements:
-Determinstic signing
 Private key import wizard (wallet.dat, DER, ...)
 Signature export and import options (format, PKCS,...)
 Private key, address, options saving

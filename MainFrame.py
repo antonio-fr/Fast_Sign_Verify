@@ -17,7 +17,7 @@ import wx.xrc
 class MyFrame1 ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"FastSignVerify  v0.xx", pos = wx.DefaultPosition, size = wx.Size( 504,571 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"FastSignVerify  v0.30", pos = wx.DefaultPosition, size = wx.Size( 504,571 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL )
 		
 		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		self.SetBackgroundColour( wx.Colour( 245, 247, 248 ) )
@@ -40,7 +40,7 @@ class MyFrame1 ( wx.Frame ):
 		
 		fgSizer2.Add( self.m_staticText2, 0, wx.ALL|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL, 5 )
 		
-		self.address = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.Point( -1,-1 ), wx.Size( 380,-1 ), 0 )
+		self.address = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.Point( -1,-1 ), wx.Size( 400,-1 ), 0 )
 		self.address.SetFont( wx.Font( 12, 70, 90, 90, False, wx.EmptyString ) )
 		
 		fgSizer2.Add( self.address, 0, wx.ALL|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL, 5 )
@@ -88,6 +88,7 @@ class MyFrame1 ( wx.Frame ):
 		gSizer3.Add( self.m_button3, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		self.check_determin = wx.CheckBox( self, wx.ID_ANY, u"Deterministic", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.check_determin.SetValue(True) 
 		gSizer3.Add( self.check_determin, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		

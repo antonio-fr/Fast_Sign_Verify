@@ -28,6 +28,7 @@ from B58 import *
 import binascii
 import base64
 import struct
+import hmac
 from ECDSA_256k1 import *
 import cPickle as pickle
 
@@ -56,9 +57,9 @@ def mulG(real):
 
 def dsha256(message):
     hash1=hashlib.sha256(message).digest()
-    return int(hashlib.sha256(hash1).hexdigest(),16)
+    return hashlib.sha256(hash1).hexdigest()
     
-    
+
 class Signature( object ):
   def __init__( self, pby, r, s ):
     self.r = r
@@ -111,16 +112,19 @@ class Private_key( object ):
                   '%064x' % self.public_key.point.y()
     return hex_der_key.decode('hex')
 
-  def sign( self, msg_asig, k ):
-    hash=dsha256(msg_asig)
+  def sign( self, hash, k ):
     G = self.public_key.generator
     n = G.order()
     p1 = mulG(k)
     r = p1.x()
-    pby= p1.y()&1
     if r == 0: raise RuntimeError, "amazingly unlucky random number r"
     s = ( inverse_mod( k, n ) * ( hash + ( self.secret_multiplier * r ) % n ) ) % n
     if s == 0: raise RuntimeError, "amazingly unlucky random number s"
+    if s > (n>>1): #Canonical Signature enforced (lower S)
+        s = n - s
+        pby = (p1.y()+1)&1
+    else:
+        pby = (p1.y())&1
     return Signature( pby, r, s )
 
 def randoml(pointgen):
@@ -129,13 +133,38 @@ def randoml(pointgen):
     cand=int(os.urandom(32).encode('hex'), 16)
   return cand
 
-def bitcoin_sign_message(privkey, message, k):
+def gen_det_k(msg_hash,priv):
+    v = '\x01' * 32
+    k = '\x00' * 32
+    msghash = ''
+    for x in xrange(0,64,2):
+        msghash =  msghash + struct.pack('B',int(msg_hash[x:x+2],16))
+    private = 1
+    priv    = binascii.unhexlify(("%064x" % private ).encode())
+    k = hmac.new(k, v+'\x00'+priv+msghash, hashlib.sha256).digest()
+    v = hmac.new(k, v                    , hashlib.sha256).digest()
+    k = hmac.new(k, v+'\x01'+priv+msghash, hashlib.sha256).digest()
+    v = hmac.new(k, v                    , hashlib.sha256).digest()
+    while True:
+        v = hmac.new(k, v, hashlib.sha256).hexdigest()
+        ksec = int(v,16)
+        if ksec >= 1 and ksec<0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141L:
+            break
+        k = hmac.new(k, v+'\x00'+priv+msghash, hashlib.sha256).digest()
+        v = hmac.new(k, v                    , hashlib.sha256).digest()
+    return ksec
+
+def hash_msg(message):
     message=message.replace("\r\n","\n")
     lenmsg=len(message)
     if lenmsg<253: lm = bytearray(struct.pack('B',lenmsg))
     else: lm = bytearray(struct.pack('B',253)+struct.pack('<H',lenmsg)) # up to 65k
-    be = bytearray("\x18Bitcoin Signed Message:\n")+ lm + bytearray(message,'utf8')
-    return privkey.sign( be , k )
+    full_msg = bytearray("\x18Bitcoin Signed Message:\n")+ lm + bytearray(message,'utf8')
+    return dsha256(full_msg)
+
+def bitcoin_sign_message(privkey, hsmessage, k):
+    msg_hash = int(hsmessage,16)
+    return privkey.sign( msg_hash , k )
 
 def bitcoin_encode_sig(signature):
   return chr( 27 + signature.pby ) + signature.encode()
@@ -189,7 +218,7 @@ def bitcoin_verify_message(address, signature, message):
         else: lm = bytearray(struct.pack('B',253)+struct.pack('<H',lenmsg)) # up to 65k
         be = bytearray("\x18Bitcoin Signed Message:\n")+ lm + bytearray(message,'utf8')
         inv_r = inverse_mod(r,order)    
-        e = dsha256( be )
+        e = int(dsha256( be ),16)
         # Q = (sR - eG) / r
         Q = inv_r * (  R.dual_mult( -e % order, s ) )
         # checks Q in range, Q on curve, Q order
@@ -226,6 +255,11 @@ if __name__ == '__main__' :
     load_gtable('G_Table')
     print "Tests started"
     
+    print "\nDeterministic RFC6979 Checking"
+    hmsg= hashlib.sha256(bytearray("Satoshi Nakamoto",'utf8')).hexdigest()
+    k = gen_det_k( hmsg, 1 )
+    assert k == 0x8F8A276C19F4149656B280621E358CCE24F5F52542772691EE69063B74F15D15L
+    
     message_signed = \
     """-----BEGIN BITCOIN SIGNED MESSAGE-----
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse faucibus, arcu imperdiet lacinia faucibus, magna tellus suscipit tortor, et auctor orci mi elementum leo. Aliquam vitae arcu viverra, tempus sem eget, mattis libero. Vestibulum ut libero dignissim, rhoncus augue eu, vulputate nisl. Quisque vitae pulvinar enim. Nullam lobortis tellus in eros consectetur, et iaculis eros interdum. Nam vehicula, sapien id consectetur rutrum, felis leo convallis eros, eget lacinia tellus nunc in dui. Etiam a quam eu lectus aliquam scelerisque. Vestibulum ac semper velit. Ut eget nulla eros. Sed venenatis purus eros, eu convallis lectus congue at. Suspendisse ipsum est, elementum et ultricies ac, sollicitudin sit amet urna. Proin viverra fusce.
@@ -236,7 +270,7 @@ G+5z8qAYM6LekZeE8ruDs1R1egjedfQxz0q8ja+v9pvWQWGozoiToB6aemOdPAOh4OFVysBMNmhZhCyI
     
     def change_car(text, pos, car):
         return text[:pos] + car + text[pos+1:]
-        
+    
     def test_false_signature(address, signature, message):
         try:
             bitcoin_verify_message(address, signature, message)
@@ -263,7 +297,7 @@ G+5z8qAYM6LekZeE8ruDs1R1egjedfQxz0q8ja+v9pvWQWGozoiToB6aemOdPAOh4OFVysBMNmhZhCyI
     test_false_signature(address, signature1, message1)
     
     print "\nBatch sign & check of random keys and messages"
-    maxend=200
+    maxend=500
     g=generator_256
     random.seed(int(os.urandom(32).encode('hex'), 16))
     for i in xrange(maxend):
@@ -274,10 +308,15 @@ G+5z8qAYM6LekZeE8ruDs1R1egjedfQxz0q8ja+v9pvWQWGozoiToB6aemOdPAOh4OFVysBMNmhZhCyI
             pubkey = Public_key( g, secret*g )
             privkey = Private_key( pubkey, secret )
             address_pub = pub_hex_base58( pubkey.point.x(), pubkey.point.y() )
-            signature = bitcoin_sign_message( privkey, message, randoml(g) )
+            hm = hash_msg(message)
+            if i%2==1:
+                k = gen_det_k( hm, privkey )
+            else:
+                k = randoml(g)
+            signature = bitcoin_sign_message( privkey, hm, k )
             signature_str = bitcoin_encode_sig( signature )
             signature64 = base64.b64encode( signature_str )
-            fullsig=output_full_sig(message,address_pub,signature64)
+            fullsig = output_full_sig(message,address_pub,signature64)
             addr, sigd, msgd = decode_sig_msg(fullsig)
             bitcoin_verify_message(addr, sigd, msgd)
         except Exception as inst:

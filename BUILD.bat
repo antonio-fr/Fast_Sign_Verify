@@ -5,5 +5,4 @@ cd dist
 ren main.exe FSV.exe
 cd ..
 copy c:\Python27_32\Lib\msvcp90.dll dist
-cd dist
-
+copy G_Table dist

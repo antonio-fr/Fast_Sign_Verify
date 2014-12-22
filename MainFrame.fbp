@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <wxFormBuilder_Project>
-    <FileVersion major="1" minor="12" />
+    <FileVersion major="1" minor="13" />
     <object class="Project" expanded="1">
         <property name="class_decoration"></property>
         <property name="code_generation">Python</property>
@@ -47,7 +47,7 @@
             <property name="size">504,571</property>
             <property name="style">wxCAPTION|wxCLOSE_BOX|wxSYSTEM_MENU</property>
             <property name="subclass"></property>
-            <property name="title">FastSignVerify  v0.30</property>
+            <property name="title">FastSignVerify  v0.40</property>
             <property name="tooltip"></property>
             <property name="window_extra_style"></property>
             <property name="window_name"></property>

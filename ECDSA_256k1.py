@@ -64,15 +64,12 @@ class Point( object ):
         return self.double()
     l = ( ( other.__y - self.__y ) * inverse_mod( other.__x - self.__x, p ) ) % p
     x3 = ( l * l - self.__x - other.__x ) % p
-    y3 = ( l * ( self.__x - x3 ) - self.__y ) % p
-    return Point( x3, y3 )
+    return Point( x3, ( l * ( self.__x - x3 ) - self.__y ) % p )
 
-  def __mul__( self, other ):
-    e = other
+  def __mul__( self, e ):
     if self.__order: e = e % self.__order
     if e == 0: return INFINITY
     if self == INFINITY: return INFINITY
-    assert e > 0
     e3 = 3 * e
     negative_self = Point( self.__x, -self.__y, self.__order )
     i = 0x100000000000000000000000000000000000000000000000000000000000000000L
@@ -100,8 +97,7 @@ class Point( object ):
       return INFINITY
     xyd=((self.__x*self.__x)*inverse_mod(2*self.__y,p))%p
     x3=(9*xyd*xyd-2*self.__x)%p
-    y3=(3*xyd*(self.__x-x3)-self.__y)%p
-    return Point( x3, y3 )
+    return Point( x3, (3*xyd*(self.__x-x3)-self.__y)%p )
 
   def dual_mult(self, k1, k2):
     # Compute k1.G+k2.self
@@ -110,7 +106,7 @@ class Point( object ):
     if self == INFINITY: return INFINITY
     if k1 == 0: return INFINITY
     assert k2 > 0
-    assert k1> 0
+    assert k1 > 0
     e3, k3 = 3 * k2, 3 * k1
     negative_self = Point( self.__x, -self.__y, self.__order )
     neg_generator_256 = Point( _Gx, -_Gy, _r )
@@ -150,15 +146,14 @@ class Point( object ):
 INFINITY = Point( None, None )
 
 def inverse_mod( a, m ):
-  if a < 0 or m <= a: a = a % m
-  c, d = a, m
-  uc, vc, ud, vd = 1, 0, 0, 1
-  while c != 0:
-    q, c, d = divmod( d, c ) + ( c, )
-    uc, vc, ud, vd = ud - q*uc, vd - q*vc, uc, vc
-  assert d == 1
-  if ud > 0: return ud
-  else: return ud + m
+  if a < 0 or m <= a: a=a%m
+  u, v = a,m
+  xa,xb = 1,0
+  while u != 1:
+    q,r = divmod(v,u)
+    x=xb-q*xa
+    v,u,xb,xa = u,r,xa,x
+  return xa%m
 
 curve_256 = CurveFp( _p, _b )
 generator_256 = Point( _Gx, _Gy, _r )

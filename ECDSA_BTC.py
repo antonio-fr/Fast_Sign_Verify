@@ -305,7 +305,7 @@ G+5z8qAYM6LekZeE8ruDs1R1egjedfQxz0q8ja+v9pvWQWGozoiToB6aemOdPAOh4OFVysBMNmhZhCyI
         secret = random.randint(1,g.order())
         message = ''.join([random.choice(string.digits+string.letters+'    \n') for x in range(80)])
         try:
-            pubkey = Public_key( g, secret*g )
+            pubkey = Public_key( g, mulG(secret) )
             privkey = Private_key( pubkey, secret )
             address_pub = pub_hex_base58( pubkey.point.x(), pubkey.point.y() )
             hm = hash_msg(message)
